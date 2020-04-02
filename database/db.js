@@ -1,4 +1,5 @@
 const Sequelize = require('sequelize');
+
 try {
     const db = new Sequelize('smarkio', 'root', 'g9cr5kuj', {
         host: 'localhost',
@@ -6,7 +7,8 @@ try {
         logging: false
     });
 
-    module.exports = db;
+    module.exports = { db, Sequelize };
 } catch (err) {
-    console.log(err, 'Erro ao conectar no banco de dados.');
+    console.log(err, 'Erro ao conectar-se ao banco de dados.');
+    db.close();
 }

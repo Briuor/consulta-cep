@@ -1,4 +1,5 @@
 const axios = require('axios');
+const fs = require('fs');
 const DadosDep = require('../model/dadosDep');
 
 module.exports = class DadosDepController {
@@ -6,6 +7,9 @@ module.exports = class DadosDepController {
         this.CEP_API_URL = 'http://cep.bldstools.com/?cep=';
     }
 
+    /**
+     * Get all dadosDep from database and show
+     */
     async getAllDadosDep() {
         await DadosDep.findAll().then(dadosDeps => {
             for (let dadosDep of dadosDeps) {
@@ -14,29 +18,62 @@ module.exports = class DadosDepController {
                 console.log(`Cep: ${cep}`);
                 console.log(`Endereco: ${endereco}, ${bairro}, ${cidade}, ${estado}\n`);
             }
-            console.log(`Foram encontrados ${dadosDeps.length} ceps registrados.`);
+            console.log(`\n> Foram encontrados ${dadosDeps.length} ceps registrados.\n`);
+        }).catch(() => {
+            console.log('\n> Ocorreu um erro ao buscar ceps, tente novamente mais tarde.\n');
         });
     }
 
+    /**
+     * Get all dadosDep from database and save in json format
+     */
+    async saveInJson() {
+        await DadosDep.findAll().then(dadosDeps => {
+            if (dadosDeps.length > 0) {
+                fs.writeFileSync('dados.json', JSON.stringify(dadosDeps));
+                console.log(`\n> JSON dos registros gerado como "dados.json"\n`);
+            }
+            else {
+                console.log('\n> Nenhum registro encontrado.\n');
+            }
+        }).catch(() => {
+            console.log('\n> Ocorreu um erro ao salvar, tente novamente mais tarde.\n');
+        });
+    }
+
+    /**
+     * 
+     * @param {string} name - user input name 
+     * @param {string} cep - user input cep
+     * Get cep data from api, if valid data insert into database if not exist yet
+     * else shows a warning message
+     */
     async createDadosDep(name, cep) {
+        // get data from cep api
         await this.getCepData(cep).then(async cepData => {
             if (cepData.obj !== null) {
+                // create dadosDep instance
                 const dadosDep = {
                     nome: name,
-                    cep: Number.parseInt(cep),
+                    cep: cepData.obj.cep,
                     endereco: cepData.obj.logradouro,
                     bairro: cepData.obj.bairro,
                     cidade: cepData.obj.localidade,
-                    estado: cepData.obj.uf
+                    estado: cepData.obj.uf,
+                    retorno_api: cepData.jsonResponse
                 };
+                // try to insert into database if not exist yet else show warning message
                 await DadosDep.findOrCreate({
                     where: { cep: dadosDep.cep },
                     defaults: dadosDep
                 }).then(res => {
-                    const created = res[1];
-                    created ?
-                        console.log('\n> Cadastrado com sucesso!\n') :
+                    const wasCreated = res[1];
+                    if (wasCreated)
+                        console.log('\n> Cadastrado com sucesso!\n')
+                    else
                         console.log('\n> Cep digitado já está registrado!\n');
+                }).catch(() => {
+                    console.log('\n> Ocorreu um erro ao registrar cep, tente novamente mais tarde.\n');
                 });
             }
             else {
@@ -45,10 +82,14 @@ module.exports = class DadosDepController {
         })
     }
 
+    /**
+     * Try to find a dadosDep containing cep param in database
+     * if found delete it
+     * else shows a warning message
+     * @param {string} cep - user input cep
+     */
     async deleteDadosDep(cep) {
-        await DadosDep.findOne({
-            where: { cep },
-        }).then(res => {
+        await DadosDep.findOne({ where: { cep } }).then(res => {
             if (!res) {
                 console.log(`\n> ${cep} não está registrado.\n`);
             }
@@ -56,11 +97,19 @@ module.exports = class DadosDepController {
                 res.destroy();
                 console.log(`\n> ${cep} Deletado.\n`);
             }
-        }).catch(
-            console.log('\n> Ocorreu um erro ao deletar, tente novamente mais tarde\n')
-        );
+        }).catch(() => {
+            console.log('\n> Ocorreu um erro ao deletar, tente novamente mais tarde\n');
+        });
     }
 
+    /**
+     * get data from cep api by cep parameter
+     * if cep data found
+     * return { obj: resultData, jsonResponse: responseJson}
+     * else if not found
+     * return { obj: null, errMessage: errorMessage,}
+     * @param {string} cep 
+     */
     async getCepData(cep) {
         const NOT_FOUND = { obj: null, errMessage: '\n> Infelizmente o cep digitado não foi encontrado.\n' };
         const NOT_VALID = { obj: null, errMessage: '\n> O cep informado é inválido.\n' };
@@ -71,7 +120,7 @@ module.exports = class DadosDepController {
             const { code, result } = res.data;
             switch (code) {
                 case 200:
-                    return { obj: result };
+                    return { obj: result, jsonResponse: res.data };
                 case 404:
                     return NOT_FOUND;
                 case 401:

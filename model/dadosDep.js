@@ -1,5 +1,4 @@
-const Sequelize = require('sequelize');
-const db = require('../database/db');
+const { db, Sequelize } = require('../database/db');
 
 const DadosDep = db.define('dados_dep', {
     id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
