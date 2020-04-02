@@ -1,5 +1,8 @@
 # TEST DEV SMARKIO
 > Console application para consulta de dados de CEP utilizando a API http://cep.bldstools.com/?cep={cep}.
+<p align="center"> 
+<img src="https://raw.githubusercontent.com/Briuor/Test-Dev-Smakio/master/screenshots/demo.gif">
+</p>
 
 ## Instalação
 ```sh

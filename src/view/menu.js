@@ -37,6 +37,7 @@ module.exports = class Menu {
                     break;
                 case Menu.DELETE_CEP:
                     cep = await this.write('cep', 'Digite o cep: ');
+                    cep = Number.parseInt(cep.replace('-', ''));
                     await this.dadosDepController.deleteDadosDep(cep);
                     break;
                 case Menu.LEAVE:
