@@ -1,32 +1,36 @@
 const inquirer = require('inquirer');
 
 module.exports = class Menu {
+
+    // menu option constants
+    static REGISTER_CEP = 'Inserir novo cep';
+    static DELETE_CEP = 'Deletar cep';
+    static SHOW_CEPS = 'Mostrar ceps inseridos';
+    static LEAVE = 'Sair';
+
     constructor() {
-        this.SEARCH_CEP = 'Buscar dados do CEP';
-        this.SHOW_CEPS = 'Mostrar ceps encontrados';
-        this.LEAVE = 'Sair';
-        this.options = [this.SEARCH_CEP, this.SHOW_CEPS, this.LEAVE]
+        this.options = [Menu.REGISTER_CEP, Menu.DELETE_CEP, Menu.SHOW_CEPS, Menu.LEAVE];
     }
 
     async chooseOption() {
         const res = await inquirer.prompt([{
             name: 'option',
-            type: 'rawlist',
-            message: 'Escolha sua opção\n*utilize as setas do teclado e enter para escolher.',
+            type: 'list',
+            suffix: '(Use as setas e enter para escolher)',
+            message: 'Escolha sua opção',
             choices: this.options,
         }]);
-        clearConsole();
+        this.clearConsole();
         return res.option;
     }
 
-    async writeCep() {
+    async write({ fieldName, message }) {
         const res = await inquirer.prompt([{
-            name: 'cep',
+            name: fieldName,
             type: 'input',
-            message: 'Digite o cep:',
+            message,
         }]);
-        clearConsole();
-        return res.cep;
+        return res[fieldName];
     }
 
     clearConsole() {

@@ -1,24 +1,31 @@
 const Menu = require('./view/menu');
+const DadosDepController = require('./controller/dadosDepController');
 
 (async () => {
     let menu = new Menu();
-    let run = true;
-    while (run) {
+    let dadosDepController = new DadosDepController();
+    let cep = '', name = '';
+    while (true) {
         const option = await menu.chooseOption();
         switch (option) {
-            case menu.SEARCH_CEP:
-                let cep = await menu.writeCep();
+            case Menu.REGISTER_CEP:
+                cep = await menu.write({ fieldName: 'cep', message: 'Digite o cep: ' });
+                name = await menu.write({ fieldName: 'name', message: 'Digite o nome da pessoa: ' });
+                await dadosDepController.createDadosDep(name, cep);
                 break;
-            case menu.SHOW_CEPS:
+            case Menu.SHOW_CEPS:
+                await dadosDepController.getAllDadosDep();
                 break;
-            case menu.LEAVE:
-                run = false;
+            case Menu.DELETE_CEP:
+                cep = await menu.write({ fieldName: 'cep', message: 'Digite o cep: ' });
+                await dadosDepController.deleteDadosDep(cep);
                 break;
+            case Menu.LEAVE:
+                process.exit();
             default:
                 console.log('Opção inexistente, tente novamente.');
         }
     }
-    console.log('Espero que tenha encontrado seu cep!');
 })();
 
 
